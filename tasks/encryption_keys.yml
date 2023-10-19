@@ -1,4 +1,12 @@
 ---
+- name: Encryption keys | Create ZFS passphrase file
+  ansible.builtin.template:
+    src: zfs_key.j2
+    dest: "{{ zfs_key_file }}"
+    owner: root
+    group: root
+    mode: "0000"
+
 - name: Encryption keys | Get encrypted pools
   ansible.builtin.set_fact:
     zfs_encrypted_pools: >-
