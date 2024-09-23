@@ -20,6 +20,7 @@
     if item.options is defined else '' }}
     {{ item.name }} {{ item.devices|join (' ') }}
   register: zpool_created
+  changed_when: zpool_created.rc == 0
   with_items: "{{ zfs_pools }}"
   when: >
     zfs_pools is defined and
@@ -54,6 +55,7 @@
     {{ item.name }} {{ item.type }} {{ item.devices|join (' ') }}
   with_items: "{{ zfs_pools }}"
   register: zpool_created
+  changed_when: zpool_created.rc == 0
   when: >
         zfs_pools is defined and
         zfs_create_pools and
