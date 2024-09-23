@@ -1,5 +1,6 @@
 ---
-- ansible.builtin.set_fact:
+- name: debian | Set default debian distribution
+  ansible.builtin.set_fact:
     default_debian_distribution: "{{ ansible_distribution_release }}"
   when: default_debian_distribution is not defined
 

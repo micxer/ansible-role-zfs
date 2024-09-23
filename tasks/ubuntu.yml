@@ -1,31 +1,28 @@
 ---
-- name: ubuntu | Adding zfs ppa
-  ansible.builtin.apt_repository:
-    repo: "{{ zfs_ubuntu_ppa }}"
-    state: present
-  when: >
-    ansible_distribution_version <= '14.04'
+- name: ubuntu | Ubuntu <= 14.04
+  when: ansible_distribution_version <= '14.04'
+  block:
+    - name: ubuntu | Adding zfs ppa
+      ansible.builtin.apt_repository:
+        repo: "{{ zfs_ubuntu_ppa }}"
+        state: present
+    - name: ubuntu | Installing zfs (Ubuntu <= 14.04)
+      ansible.builtin.apt:
+        name: ubuntu-zfs
+        state: present
 
-- name: ubuntu | Installing zfs ({{ ansible_distribution_version }} <= 14.04)
-  ansible.builtin.apt:
-    name: ubuntu-zfs
-    state: present
-  when: >
-    ansible_distribution_version <= '14.04'
+- name: ubuntu | Ubuntu >= 16.04
+  when: ansible_distribution_version >= '16.04'
+  block:
+    - name: ubuntu | Ensuring Ubuntu universe repo is enabled
+      ansible.builtin.apt_repository:
+        repo: deb {{ ubuntu_apt_repository }} {{ ansible_distribution_release | lower }} universe
+        state: present
 
-- name: ubuntu | Ensuring Ubuntu universe repo is enabled ({{ ansible_distribution_version }} >= 16.04)
-  ansible.builtin.apt_repository:
-    repo: deb {{ ubuntu_apt_repository }} {{ ansible_distribution_release | lower }} universe
-    state: present
-  when: >
-    ansible_distribution_version >= '16.04'
-
-- name: ubuntu | Installing zfs ({{ ansible_distribution_version }} >= 16.04)
-  ansible.builtin.apt:
-    name: zfsutils-linux
-    state: present
-  when: >
-    ansible_distribution_version >= '16.04'
+    - name: ubuntu | Installing zfs (Ubuntu >= 16.04)
+      ansible.builtin.apt:
+        name: zfsutils-linux
+        state: present
 
 - name: ubuntu | Enabling zfs module
   community.general.modprobe:
