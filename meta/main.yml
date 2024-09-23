@@ -1,7 +1,11 @@
+---
 galaxy_info:
-  author: Larry Smith Jr.
+  author: micxer
   description: Installs and configures ZFS On Linux (http://zfsonlinux.org/)
   #company: your company (optional)
+
+  role_name: ansible_zfs # if absent directory name hosting role is used instead
+  namespace: micxer # if absent, author is used instead
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
@@ -14,7 +18,7 @@ galaxy_info:
   # - GPLv3
   # - Apache
   # - CC-BY
-  license: license (GPLv2, CC-BY, etc)
+  license: BSD
 
   min_ansible_version: 2.5
 
@@ -102,39 +106,39 @@ galaxy_info:
   #  - 9.1
   #  - 9.2
   #  - 9.3
-  - name: Ubuntu
-    versions:
-  #  - all
-  #  - lucid
-  #  - maverick
-  #  - natty
-  #  - oneiric
-  #  - precise
-  #  - quantal
-  #  - raring
-  #  - saucy
-    - trusty
-  #  - utopic
-    - vivid
-    - wily
-  #- name: SLES
-  #  versions:
-  #  - all
-  #  - 10SP3
-  #  - 10SP4
-  #  - 11
-  #  - 11SP1
-  #  - 11SP2
-  #  - 11SP3
-  #- name: GenericLinux
-  #  versions:
-  #  - all
-  #  - any
-  - name: Debian
-    versions:
-  #  - all
-  #  - etch
-    - jessie
+    - name: Ubuntu
+      versions:
+        #  - all
+        #  - lucid
+        #  - maverick
+        #  - natty
+        #  - oneiric
+        #  - precise
+        #  - quantal
+        #  - raring
+        #  - saucy
+        - trusty
+        #  - utopic
+        - vivid
+        - wily
+    #- name: SLES
+    #  versions:
+    #  - all
+    #  - 10SP3
+    #  - 10SP4
+    #  - 11
+    #  - 11SP1
+    #  - 11SP2
+    #  - 11SP3
+    #- name: GenericLinux
+    #  versions:
+    #  - all
+    #  - any
+    - name: Debian
+      versions:
+        #  - all
+        #  - etch
+        - jessie
   #  - lenny
   #  - squeeze
   #  - wheezy

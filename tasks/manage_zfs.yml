@@ -1,209 +1,213 @@
 ---
-- name: manage_zfs | checking existing zpool(s)
-  ansible.builtin.shell: "zpool list | awk 'FNR >1' | awk '{print $1}'"
+- name: manage_zfs | Checking existing zpool(s)
+  ansible.builtin.shell: zpool list | awk 'FNR >1' | awk '{print $1}'
   changed_when: false
   register: zpools
-  check_mode: no
+  check_mode: false
   when: zfs_pools is defined
 
 - name: manage_zfs | Gather ZPool Status
-  ansible.builtin.shell: zpool status
+  ansible.builtin.command: zpool status
   changed_when: false
   register: zpool_devices
-  check_mode: no
+  check_mode: false
   when: zfs_pools is defined
 
-- name: manage_zfs | creating basic zpool(s)
-  ansible.builtin.command: "zpool create {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.devices|join (' ') }}"
+- name: manage_zfs | Creating basic zpool(s)
+  ansible.builtin.command: zpool create {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{
+    item.devices|join (' ') }}
   register: zpool_created
   with_items: "{{ zfs_pools }}"
   when: >
-        zfs_pools is defined and
-        zfs_create_pools and
-        (item.type == "basic" and
-        item.name not in zpools.stdout and
-        item.state == "present") and
-        item.devices[0] not in zpool_devices.stdout and
-        item.action|lower == "create"
+    zfs_pools is defined and
+    zfs_create_pools and
+    (item.type == "basic" and
+    item.name not in zpools.stdout and
+    item.state == "present") and
+    item.devices[0] not in zpool_devices.stdout and
+    item.action|lower == "create"
 
-- name: manage_zfs | adding basic zpool(s)
-  ansible.builtin.command: "zpool add {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.devices|join (' ') }}"
+- name: manage_zfs | Adding basic zpool(s)
+  ansible.builtin.command: zpool add {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.devices|join
+    (' ') }}
   with_items: "{{ zfs_pools }}"
   when: >
-        zfs_pools is defined and
-        zfs_create_pools and
-        (item.type == "basic" and
-        item.state == "present") and
-        (item.devices[0]|basename) not in zpool_devices.stdout and
-        item.action|lower == "add" and
-        (zpool_created.changed or item.name in zpools.stdout)
+    zfs_pools is defined and
+    zfs_create_pools and
+    (item.type == "basic" and
+    item.state == "present") and
+    (item.devices[0]|basename) not in zpool_devices.stdout and
+    item.action|lower == "add" and
+    (zpool_created.changed or item.name in zpools.stdout)
 
-- name: manage_zfs | creating mirror/zraid zpool(s)
-  ansible.builtin.command: "zpool create {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.type }} {{ item.devices|join (' ') }}"
+- name: manage_zfs | Creating mirror/zraid zpool(s)
+  ansible.builtin.command: zpool create {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{
+    item.type }} {{ item.devices|join (' ') }}
   with_items: "{{ zfs_pools }}"
   register: zpool_created
   when: >
-        zfs_pools is defined and
-        zfs_create_pools and
-        (item.type != "basic" and
-        item.name not in zpools.stdout and
-        item.state == "present") and
-        item.devices[0] not in zpool_devices.stdout and
-        item.action|lower == "create"
+    zfs_pools is defined and
+    zfs_create_pools and
+    (item.type != "basic" and
+    item.name not in zpools.stdout and
+    item.state == "present") and
+    item.devices[0] not in zpool_devices.stdout and
+    item.action|lower == "create"
 
-- name: manage_zfs | adding mirror/zraid zpool(s)
-  ansible.builtin.command: "zpool add {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.type }} {{ item.devices|join (' ') }}"
+- name: manage_zfs | Adding mirror/zraid zpool(s)
+  ansible.builtin.command: zpool add {{ '-o '+ item.options.items() |map('join', '=') | join (' -o ') if item.options is defined else '' }} {{ item.name }} {{ item.type
+    }} {{ item.devices|join (' ') }}
   with_items: "{{ zfs_pools }}"
   when: >
-        zfs_pools is defined and
-        zfs_create_pools and
-        (item.type != "basic" and
-        item.state == "present") and
-        (item.devices[0]|basename) not in zpool_devices.stdout and
-        item.action|lower == "add" and
-        (zpool_created.changed or item.name in zpools.stdout)
+    zfs_pools is defined and
+    zfs_create_pools and
+    (item.type != "basic" and
+    item.state == "present") and
+    (item.devices[0]|basename) not in zpool_devices.stdout and
+    item.action|lower == "add" and
+    (zpool_created.changed or item.name in zpools.stdout)
 
-- name: manage_zfs | managing pools
-  zfs:
+- name: manage_zfs | Managing pools
+  community.general.zfs:
     name: "{{ item.name }}"
     extra_zfs_properties:
-      aclinherit: "{{ item.aclinherit|default(omit) }}"
-      acltype: "{{ item.acltype|default(omit) }}"
-      atime: "{{ item.atime|default(omit) }}"
-      compression: "{{ item.compression|default(omit) }}"
-      dedup: "{{ item.dedup|default(omit) }}"
-      logbias: "{{ item.logbias|default(omit) }}"
-      mountpoint: "{{ item.mountpoint|default(omit) }}"
-      primarycache: "{{ item.primarycache|default(omit) }}"
-      quota: "{{ item.quota|default(omit) }}"
-      recordsize: "{{ item.recordsize|default(omit) }}"
-      refquota: "{{ item.refquota|default(omit) }}"
-      sharenfs: "{{ item.sharenfs|default(omit) }}"
-      snapdev: "{{ item.snapdev|default('hidden') }}"
-      snapdir: "{{ item.snapdir|default('hidden') }}"
-      sync: "{{ item.sync|default(omit) }}"
-      xattr: "{{ item.xattr|default(omit) }}"
+      aclinherit: "{{ item.aclinherit | default(omit) }}"
+      acltype: "{{ item.acltype | default(omit) }}"
+      atime: "{{ item.atime | default(omit) }}"
+      compression: "{{ item.compression | default(omit) }}"
+      dedup: "{{ item.dedup | default(omit) }}"
+      logbias: "{{ item.logbias | default(omit) }}"
+      mountpoint: "{{ item.mountpoint | default(omit) }}"
+      primarycache: "{{ item.primarycache | default(omit) }}"
+      quota: "{{ item.quota | default(omit) }}"
+      recordsize: "{{ item.recordsize | default(omit) }}"
+      refquota: "{{ item.refquota | default(omit) }}"
+      sharenfs: "{{ item.sharenfs | default(omit) }}"
+      snapdev: "{{ item.snapdev | default('hidden') }}"
+      snapdir: "{{ item.snapdir | default('hidden') }}"
+      sync: "{{ item.sync | default(omit) }}"
+      xattr: "{{ item.xattr | default(omit) }}"
     state: "{{ item.state }}"
   with_items: "{{ zfs_pools }}"
   when: zfs_create_pools
 
-- name: manage_zfs | managing filesystems
-  zfs:
+- name: manage_zfs | Managing filesystems
+  community.general.zfs:
     name: "{{ item.pool }}/{{ item.name }}"
     extra_zfs_properties:
-      aclinherit: "{{ item.aclinherit|default(omit) }}"
-      acltype: "{{ item.acltype|default(omit) }}"
-      atime: "{{ item.atime|default(omit) }}"
-      compression: "{{ item.compression|default(omit) }}"
-      dedup: "{{ item.dedup|default(omit) }}"
-      encryption: "{{ item.encryption|default(omit) }}"
-      keyformat: "{{ item.keyformat|default(omit) }}"
-      keylocation: "{{ item.keylocation|default(omit) }}"
-      logbias: "{{ item.logbias|default(omit) }}"
-      mountpoint: "{{ item.mountpoint|default(omit) }}"
-      primarycache: "{{ item.primarycache|default(omit) }}"
-      quota: "{{ item.quota|default(omit) }}"
-      recordsize: "{{ item.recordsize|default(omit) }}"
-      refquota: "{{ item.refquota|default(omit) }}"
-      sharenfs: "{{ item.sharenfs|default(omit) }}"
-      snapdev: "{{ item.snapdev|default('hidden') }}"
-      snapdir: "{{ item.snapdir|default('hidden') }}"
-      sync: "{{ item.sync|default(omit) }}"
-      xattr: "{{ item.xattr|default(omit) }}"
+      aclinherit: "{{ item.aclinherit | default(omit) }}"
+      acltype: "{{ item.acltype | default(omit) }}"
+      atime: "{{ item.atime | default(omit) }}"
+      compression: "{{ item.compression | default(omit) }}"
+      dedup: "{{ item.dedup | default(omit) }}"
+      encryption: "{{ item.encryption | default(omit) }}"
+      keyformat: "{{ item.keyformat | default(omit) }}"
+      keylocation: "{{ item.keylocation | default(omit) }}"
+      logbias: "{{ item.logbias | default(omit) }}"
+      mountpoint: "{{ item.mountpoint | default(omit) }}"
+      primarycache: "{{ item.primarycache | default(omit) }}"
+      quota: "{{ item.quota | default(omit) }}"
+      recordsize: "{{ item.recordsize | default(omit) }}"
+      refquota: "{{ item.refquota | default(omit) }}"
+      sharenfs: "{{ item.sharenfs | default(omit) }}"
+      snapdev: "{{ item.snapdev | default('hidden') }}"
+      snapdir: "{{ item.snapdir | default('hidden') }}"
+      sync: "{{ item.sync | default(omit) }}"
+      xattr: "{{ item.xattr | default(omit) }}"
     state: "{{ item.state }}"
   with_items: "{{ zfs_filesystems }}"
   when: zfs_create_filesystems
 
-- name: manage_zfs | managing volumes
-  zfs:
+- name: manage_zfs | Managing volumes
+  community.general.zfs:
     name: "{{ item.pool }}/{{ item.name }}"
     extra_zfs_properties:
-      compression: "{{ item.compression|default(omit) }}"
-      dedup: "{{ item.dedup|default(omit) }}"
-      encryption: "{{ item.encryption|default(omit) }}"
-      keyformat: "{{ item.keyformat|default(omit) }}"
-      keylocation: "{{ item.keylocation|default(omit) }}"
-      logbias: "{{ item.logbias|default(omit) }}"
-      primarycache: "{{ item.primarycache|default(omit) }}"
-      quota: "{{ item.quota|default(omit) }}"
-      recordsize: "{{ item.recordsize|default(omit) }}"
-      refquota: "{{ item.refquota|default(omit) }}"
+      compression: "{{ item.compression | default(omit) }}"
+      dedup: "{{ item.dedup | default(omit) }}"
+      encryption: "{{ item.encryption | default(omit) }}"
+      keyformat: "{{ item.keyformat | default(omit) }}"
+      keylocation: "{{ item.keylocation | default(omit) }}"
+      logbias: "{{ item.logbias | default(omit) }}"
+      primarycache: "{{ item.primarycache | default(omit) }}"
+      quota: "{{ item.quota | default(omit) }}"
+      recordsize: "{{ item.recordsize | default(omit) }}"
+      refquota: "{{ item.refquota | default(omit) }}"
       # shareiscsi: "{{ item.shareiscsi|default(omit) }}"
-      sync: "{{ item.sync|default(omit) }}"
-      volsize: "{{ item.volsize|default(omit) }}"
+      sync: "{{ item.sync | default(omit) }}"
+      volsize: "{{ item.volsize | default(omit) }}"
     state: "{{ item.state }}"
   notify:
     - restart iscsitarget
   with_items: "{{ zfs_volumes }}"
   when: zfs_create_volumes
 
-- name: manage_zfs | setting ZFS filesystem permissions
+- name: manage_zfs | Setting ZFS filesystem permissions
+  when: zfs_manage_filesystem_permissions
+
   block:
-    - name: manage_zfs | setting explicit mount ZFS Filesystem Permissions
-      file:
+    - name: manage_zfs | Setting explicit mount ZFS Filesystem Permissions
+      ansible.builtin.file:
         path: "{{ item.mountpoint }}"
-        mode: "{{ item.mode|default(omit) }}"
-        owner: "{{ item.owner|default(omit) }}"
-        group: "{{ item.group|default(omit) }}"
+        mode: "{{ item.mode | default(omit) }}"
+        owner: "{{ item.owner | default(omit) }}"
+        group: "{{ item.group | default(omit) }}"
       with_items: "{{ zfs_filesystems }}"
       when: item.mountpoint is defined
-    - name: manage_zfs | fetching inherited ZFS filesystem mounts
-      shell: "zfs get -Hp -o value mountpoint {{ item.pool }}/{{ item.name }}"
+    - name: manage_zfs | Fetching inherited ZFS filesystem mounts
+      ansible.builtin.command: zfs get -Hp -o value mountpoint {{ item.pool }}/{{ item.name }}
       changed_when: false
       register: zfs_filesystem_mounts
       with_items: "{{ zfs_filesystems }}"
       when: item.mountpoint is not defined
-    - name: manage_zfs | setting inherited mount ZFS filesystem permissions
-      file:
+    - name: manage_zfs | Setting inherited mount ZFS filesystem permissions
+      ansible.builtin.file:
         path: "{{ item.stdout }}"
-        mode: "{{ item.item.mode|default(omit) }}"
-        owner: "{{ item.item.owner|default(omit) }}"
-        group: "{{ item.item.group|default(omit) }}"
+        mode: "{{ item.item.mode | default(omit) }}"
+        owner: "{{ item.item.owner | default(omit) }}"
+        group: "{{ item.item.group | default(omit) }}"
       with_items:
         - "{{ zfs_filesystem_mounts.results }}"
       loop_control:
         label: "{{ item.item }}"
       when: >
-            zfs_filesystem_mounts and
-            item.stdout is defined and
-            item.stdout
-  when: zfs_manage_filesystem_permissions
-
-- name: manage_zfs | configuring iscsi devices
-  template:
+        zfs_filesystem_mounts and
+        item.stdout is defined and
+        item.stdout
+- name: manage_zfs | Configuring iscsi devices
+  ansible.builtin.template:
     src: etc/iet/ietd.conf.j2
     dest: /etc/iet/ietd.conf
     owner: root
     group: root
-    mode: 0600
+    mode: "0600"
   notify:
     - restart iscsitarget
   when: >
-        zfs_enable_iscsi is defined and
-        zfs_enable_iscsi
+    zfs_enable_iscsi is defined and
+    zfs_enable_iscsi
 
-- name: manage_zfs | configuring iscsi device access
-  template:
+- name: manage_zfs | Configuring iscsi device access
+  ansible.builtin.template:
     src: etc/iet/initiators.allow.j2
     dest: /etc/iet/initiators.allow
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - restart iscsitarget
   when: >
-        zfs_enable_iscsi is defined and
-        zfs_enable_iscsi
+    zfs_enable_iscsi is defined and
+    zfs_enable_iscsi
 
-- name: manage_zfs | configuring iscsi targets access
-  template:
+- name: manage_zfs | Configuring iscsi targets access
+  ansible.builtin.template:
     src: etc/iet/targets.allow.j2
     dest: /etc/iet/targets.allow
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - restart iscsitarget
   when: >
-        zfs_enable_iscsi is defined and
-        zfs_enable_iscsi
+    zfs_enable_iscsi is defined and
+    zfs_enable_iscsi
