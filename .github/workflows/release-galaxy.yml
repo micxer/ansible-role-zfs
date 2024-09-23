@@ -1,38 +1,35 @@
----
 name: Ansible Galaxy
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
-      - master
-  release:
-    types:
-      - published
+    tags:
+      - 'v*'
+
+env:
+  GALAXY_USERNAME: micxer
 
 jobs:
-  galaxy:
+
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.9]
     steps:
-      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.
+        uses: actions/setup-python@v5
         with:
-          submodules: recursive
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
-          pip install pre-commit
+          python-version: '3.x'
+
+      - name: Install Ansible.
+        run: pip3 install ansible-core
+
+      # Galaxy uses CamelCase username but GitHub is all lowercase
+      # This concatenates the versions together to work with
+      # And triggers an import on Galaxy
       - name: Trigger a new import on Galaxy.
-        run: ansible-galaxy role import --api-key ${{ secrets.GALAXY_API_KEY }} $(echo ${{ github.repository }} | cut -d/ -f1) $(echo ${{ github.repository }} | cut -d/ -f2)
+        run: |
+          REPO="$(echo ${{ github.repository }} | cut -d/ -f2)"
+          ROLE_NAME="$(echo "${REPO#ansible-role-}" | tr '-' '_')"
+          ansible-galaxy role import --token ${{ secrets.GALAXY_API_KEY }} \
+          --branch main --role-name $ROLE_NAME \
+          ${{ env.GALAXY_USERNAME }} $REPO
