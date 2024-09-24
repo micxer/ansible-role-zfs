@@ -9,14 +9,14 @@ zfs_create_pools: false
 
 # Overwrite debian release
 # debian_release:
-debian_use_backports: True
+debian_use_backports: true
 
 # Defines Ubuntu Repo
 ubuntu_apt_repository: http://us.archive.ubuntu.com/ubuntu
 
 # Defines Debian Backports Repo
 backports_internal_uri: https://deb.debian.org/debian
-backports_internal_components: "main contrib non-free"
+backports_internal_components: main contrib non-free
 backports_internal_additional_packages:
   - apt-transport-https
 
@@ -29,7 +29,7 @@ zfs_create_volumes: false
 zfs_debian_package_key: http://zfsonlinux.org/4D5843EA.asc
 zfs_debian_package_url: http://archive.zfsonlinux.org/debian/pool/main/z/zfsonlinux
 zfs_debian_package_version: 6
-zfs_debian_package: "zfsonlinux_{{ zfs_debian_package_version }}_all.deb"
+zfs_debian_package: zfsonlinux_{{ zfs_debian_package_version }}_all.deb
 zfs_enable_auto_snapshots: true
 
 # Defines if iscsitarget is installed to server iSCSI volumes
@@ -49,54 +49,52 @@ zfs_autoload_encryption_keys: false
 
 # Defines filesystems to manage
 zfs_filesystems: []
-  # - name: nfs
-  #   pool: tank
-  #   atime: off
-  #   # on | off (default) | lzjb | gzip | gzip-1 | gzip-2 | gzip-3 | gzip-4 | gzip-5 | gzip-6 | gzip-7 | gzip-8 | gzip-9 | lz4 | zle
-  #   compression: lz4
-  #   # latency (default) | throughput
-  #   logbias: latency
-  #   # Define an alternate mountpoint
-  #   # mountpoint: /var/lib/docker
-  #   # all (default) | none | metadata
-  #   primarycache: all
-  #   quota: 3G
-  #   refquota: none
-  #   # Defines recordsize.. 16K | 32K | 64K | 128K (default) | and etc.
-  #   recordsize: 16K
-  #   sharenfs: on
-  #   # standard (default) | always | disabled    sync: disabled
-  #   # Controls whether the snapshots devices of zvol's are hidden or visible. hidden (default) | visible
-  #   snapdev: visible
-  #   # Controls whether the .zfs directory is hidden or visible in the root of the file system. hidden (default) | visible
-  #   snapdir: visible
-  #   state: present
-  # - name: Shares/Movies
-  #   compression: lz4
-  #   group: nogroup
-  #   mountpoint: /TANK/Shares/Movies
-  #   owner: nobody
-  #   pool: TANK
-  #   quota: none
-  #   refquota: 100G
-  #   sharesmb: true
-  #   smb_options:
-  #     browseable: "yes"
-  #     comment: ""
-  #     create_directory_mask: "0755"
-  #     create_mask: "0777"
-  #     guest_ok: "yes"
-  #     read_only: "no"
-  #     share_name: Movies
-  #     valid_users: +users
-  #     writable: "yes"
-  #   xattr: sa
-  #   acltype: posixacl
-  #   state: present
-  #   #standard (default) | always | disabled
-  #   sync: disabled
-
-
+# - name: nfs
+#   pool: tank
+#   atime: off
+#   # on | off (default) | lzjb | gzip | gzip-1 | gzip-2 | gzip-3 | gzip-4 | gzip-5 | gzip-6 | gzip-7 | gzip-8 | gzip-9 | lz4 | zle
+#   compression: lz4
+#   # latency (default) | throughput
+#   logbias: latency
+#   # Define an alternate mountpoint
+#   # mountpoint: /var/lib/docker
+#   # all (default) | none | metadata
+#   primarycache: all
+#   quota: 3G
+#   refquota: none
+#   # Defines recordsize.. 16K | 32K | 64K | 128K (default) | and etc.
+#   recordsize: 16K
+#   sharenfs: on
+#   # standard (default) | always | disabled    sync: disabled
+#   # Controls whether the snapshots devices of zvol's are hidden or visible. hidden (default) | visible
+#   snapdev: visible
+#   # Controls whether the .zfs directory is hidden or visible in the root of the file system. hidden (default) | visible
+#   snapdir: visible
+#   state: present
+# - name: Shares/Movies
+#   compression: lz4
+#   group: nogroup
+#   mountpoint: /TANK/Shares/Movies
+#   owner: nobody
+#   pool: TANK
+#   quota: none
+#   refquota: 100G
+#   sharesmb: true
+#   smb_options:
+#     browseable: "yes"
+#     comment: ""
+#     create_directory_mask: "0755"
+#     create_mask: "0777"
+#     guest_ok: "yes"
+#     read_only: "no"
+#     share_name: Movies
+#     valid_users: +users
+#     writable: "yes"
+#   xattr: sa
+#   acltype: posixacl
+#   state: present
+#   #standard (default) | always | disabled
+#   sync: disabled
 # Defines if iscsitarget service is enabled
 zfs_iscsistarget_enable: "{{ zfs_enable_iscsi }}"
 
@@ -131,46 +129,46 @@ zfs_performance_tuning:
 
 # Defines zpool(s) to manage
 zfs_pools: []
-  # - name: SSD-TANK
-  #   action: create
-  #   # set permanent options at creation time
-  #   options:
-  #     ashift: 13
-  #   # atime: on
-  #   # on | off (default) | lzjb | gzip | gzip-1 | gzip-2 | gzip-3 | gzip-4 | gzip-5 | gzip-6 | gzip-7 | gzip-8 | gzip-9 | lz4 | zle
-  #   compression: lz4
-  #   # Define devices to create pool with...can define multiple by | sdb sdc sdd sde sdf | all on one line w/spaces
-  #   devices:
-  #     - ata-INTEL_SSDSC2BW240A4_CVDA352100YL2403GN
-  #     - ata-INTEL_SSDSC2BW240A4_BTDA329505KM2403GN
-  #   # Define pool type... | basic (no-raid) | mirror | raidz | raidz2 | raidz3
-  #   type: mirror
-  #   state: present
-  #   # override global scrub cron job parameters per zpool
-  #   scrub_cron:
-  #     # enable: False  # disable scrub cron job creation for this specific zpool
-  #     hour: 2
-  #     weekday: sat
-  # - name: SSD-TANK
-  #   action: add
-  #   # atime: on
-  #   compression: lz4
-  #   devices:
-  #     - ata-INTEL_SSDSC2BW240A4_CVDA352100GP2403GN
-  #     - ata-INTEL_SSDSC2BW240A4_CVDA401000Q02403GN
-  #   type: mirror
-  #   state: present
-  # - name: SSD-TANK
-  #   action: add
-  #   # atime: on
-  #   compression: lz4
-  #   devices:
-  #     - ata-INTEL_SSDSC2BW240A4_CVDA4010045B2403GN
-  #     - ata-INTEL_SSDSC2BW240A4_BTDA329501102403GN
-  #   type: mirror
-  #   xattr: sa
-  #   acltype: posixacl
-  #   state: present
+# - name: SSD-TANK
+#   action: create
+#   # set permanent options at creation time
+#   options:
+#     ashift: 13
+#   # atime: on
+#   # on | off (default) | lzjb | gzip | gzip-1 | gzip-2 | gzip-3 | gzip-4 | gzip-5 | gzip-6 | gzip-7 | gzip-8 | gzip-9 | lz4 | zle
+#   compression: lz4
+#   # Define devices to create pool with...can define multiple by | sdb sdc sdd sde sdf | all on one line w/spaces
+#   devices:
+#     - ata-INTEL_SSDSC2BW240A4_CVDA352100YL2403GN
+#     - ata-INTEL_SSDSC2BW240A4_BTDA329505KM2403GN
+#   # Define pool type... | basic (no-raid) | mirror | raidz | raidz2 | raidz3
+#   type: mirror
+#   state: present
+#   # override global scrub cron job parameters per zpool
+#   scrub_cron:
+#     # enable: False  # disable scrub cron job creation for this specific zpool
+#     hour: 2
+#     weekday: sat
+# - name: SSD-TANK
+#   action: add
+#   # atime: on
+#   compression: lz4
+#   devices:
+#     - ata-INTEL_SSDSC2BW240A4_CVDA352100GP2403GN
+#     - ata-INTEL_SSDSC2BW240A4_CVDA401000Q02403GN
+#   type: mirror
+#   state: present
+# - name: SSD-TANK
+#   action: add
+#   # atime: on
+#   compression: lz4
+#   devices:
+#     - ata-INTEL_SSDSC2BW240A4_CVDA4010045B2403GN
+#     - ata-INTEL_SSDSC2BW240A4_BTDA329501102403GN
+#   type: mirror
+#   xattr: sa
+#   acltype: posixacl
+#   state: present
 
 # defines global scrub cron job parameters. Only applies when `zfs_enable_monitoring` is set to True.
 zfs_pools_scrub_cron:
@@ -203,7 +201,7 @@ zfs_volumes: []
   #     - 192.168.202.0/24
   #   state: present
 
-zfs_enable_monitoring: False
+zfs_enable_monitoring: false
 
 # in percentage.
 zfs_monitoring_capacity_threshold: 80
