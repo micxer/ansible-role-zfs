@@ -1,6 +1,10 @@
 ---
 - name: Manage ZFS | Check existing zpool(s)
-  ansible.builtin.shell: "zpool list | awk 'FNR >1' | awk '{print $1}'"
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      zpool list | awk 'FNR >1' | awk '{print $1}'
+    executable: /bin/bash
   changed_when: false
   register: zpools
   check_mode: false
@@ -38,6 +42,9 @@
     if item.options is defined else '' }}
     {{ item.name }} {{ item.devices|join (' ') }}
   with_items: "{{ zfs_pools }}"
+  register: zpool_add_result
+  failed_when: "'cannot' in zpool_add_result.stderr"
+  changed_when: "zpool_add_result.rc == 0 and 'cannot' not in zpool_add_result.stderr"
   when: >
         zfs_pools is defined and
         zfs_create_pools and
@@ -72,6 +79,9 @@
     if item.options is defined else '' }}
     {{ item.name }} {{ item.type }} {{ item.devices|join (' ') }}
   with_items: "{{ zfs_pools }}"
+  register: zpool_add_result
+  failed_when: "'cannot' in zpool_add_result.stderr"
+  changed_when: "zpool_add_result.rc == 0 and 'cannot' not in zpool_add_result.stderr"
   when: >
         zfs_pools is defined and
         zfs_create_pools and
