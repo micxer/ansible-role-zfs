@@ -154,12 +154,15 @@
   when: zfs_create_volumes
 
 - name: Manage ZFS | Setting ZFS Filesystem Permissions
-  ansible.builtin.file:
-    path: "{{ item.mountpoint }}"
-    mode: "{{ item.mode | default(omit) }}"
-    owner: "{{ item.owner | default(omit) }}"
-    group: "{{ item.group | default(omit) }}"
-  with_items: "{{ zfs_filesystems }}"
+  block:
+    - name: Manage ZFS | Set permissions on filesystems with explicit mountpoints
+      ansible.builtin.file:
+        path: "{{ item.mountpoint }}"
+        mode: "{{ item.mode | default(omit) }}"
+        owner: "{{ item.owner | default(omit) }}"
+        group: "{{ item.group | default(omit) }}"
+      with_items: "{{ zfs_filesystems }}"
+      when: item.mountpoint is defined
   when: zfs_manage_filesystem_permissions
 
 - name: Manage ZFS | Configure iscsi devices
