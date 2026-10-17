@@ -163,6 +163,26 @@
         group: "{{ item.group | default(omit) }}"
       with_items: "{{ zfs_filesystems }}"
       when: item.mountpoint is defined
+    - name: Manage ZFS | Get inherited filesystem mountpoints
+      ansible.builtin.command: zfs get -Hp -o value mountpoint {{ item.pool }}/{{ item.name }}
+      changed_when: false
+      register: zfs_filesystem_mounts
+      with_items: "{{ zfs_filesystems }}"
+      when: item.mountpoint is not defined
+    - name: Manage ZFS | Set permissions on filesystems with inherited mountpoints
+      ansible.builtin.file:
+        path: "{{ item.stdout }}"
+        mode: "{{ item.item.mode | default(omit) }}"
+        owner: "{{ item.item.owner | default(omit) }}"
+        group: "{{ item.item.group | default(omit) }}"
+      with_items:
+        - "{{ zfs_filesystem_mounts.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: >
+        zfs_filesystem_mounts and
+        item.stdout is defined and
+        item.stdout
   when: zfs_manage_filesystem_permissions
 
 - name: Manage ZFS | Configure iscsi devices
